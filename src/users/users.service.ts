@@ -3,6 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { Product } from 'src/product/entities/product.entity';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class UsersService {
@@ -31,9 +32,21 @@ export class UsersService {
     });
   }
 
-  findOne(id: number) {
-    return this.usersRepository.findOne({
+  async findOne(id: number) {
+    return await this.usersRepository.findOne({
       where: { id },
+    });
+  }
+
+  async findOneByParam(userName?: string, email?: string) {
+    return await this.usersRepository.findAll({
+      attributes: ['userName', 'email'],
+      where: {
+        [Op.or]: [
+          { userName: userName === undefined ? null : userName },
+          { email: email === undefined ? null : email },
+        ],
+      },
     });
   }
 
