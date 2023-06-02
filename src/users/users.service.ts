@@ -21,8 +21,14 @@ export class UsersService {
       });
   }
 
-  async findAll(): Promise<User[]> {
+  async findAll(page?: number): Promise<User[]> {
     return this.usersRepository.findAll({
+      order: [['createdAt', 'DESC']],
+      limit: 2,
+      offset: page === undefined ? 0 : (page - 1) * 2,
+      attributes: {
+        exclude: ['password'],
+      },
       include: {
         model: Product,
         attributes: {

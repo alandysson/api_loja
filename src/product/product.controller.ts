@@ -20,7 +20,6 @@ export class ProductController {
   constructor(
     private readonly productService: ProductService,
     private helperService: HelperService,
-    private restResponse: RestResponse,
   ) {}
 
   @Post('/create')
@@ -43,35 +42,17 @@ export class ProductController {
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
   ): Promise<RestResponse> {
-    try {
-      const result = await this.productService.update(+id, updateProductDto);
-      this.restResponse.data = result;
-      this.restResponse.meta = this.helperService.returnMeta(
-        HelperConstants.OPERATION_SUCCESS,
-      );
-    } catch (error) {
-      this.restResponse.data = null;
-      this.restResponse.meta = this.helperService.returnMeta(
-        HelperConstants.ERROR,
-      );
-    }
-    return this.restResponse;
+    const result = this.helperService.responseResult(
+      this.productService.update(+id, updateProductDto),
+    );
+    return result;
   }
 
   @Delete('/delete/:id')
   async remove(@Param('id') id: string): Promise<RestResponse> {
-    try {
-      const result = await this.productService.remove(+id);
-      this.restResponse.data = [result];
-      this.restResponse.meta = this.helperService.returnMeta(
-        HelperConstants.OPERATION_SUCCESS,
-      );
-    } catch (error) {
-      this.restResponse.data = null;
-      this.restResponse.meta = this.helperService.returnMeta(
-        HelperConstants.ERROR,
-      );
-    }
-    return this.restResponse;
+    const result = this.helperService.responseResult(
+      this.productService.remove(+id),
+    );
+    return result;
   }
 }

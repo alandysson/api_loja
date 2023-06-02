@@ -37,8 +37,8 @@ export class ProductService {
     });
   }
 
-  findOne(id: number) {
-    return this.productRepository
+  async findOne(id: number) {
+    return await this.productRepository
       .findOne({
         where: {
           id: id,
@@ -64,11 +64,15 @@ export class ProductService {
     });
   }
 
-  remove(id: number) {
-    return this.productRepository.destroy({
-      where: {
-        id: id,
-      },
-    });
+  async remove(id: number) {
+    return await this.productRepository
+      .destroy({
+        where: {
+          id: id,
+        },
+      })
+      .then(() => {
+        return [null];
+      });
   }
 }
