@@ -49,7 +49,7 @@ export class ProductController {
   }
 
   @Delete('/delete/:id')
-  async remove(@Param('id') id: string): Promise<RestResponse> {
+  async remove(@Param('id') id: string) {
     const result = this.helperService.responseResult(
       this.productService.remove(+id),
     );

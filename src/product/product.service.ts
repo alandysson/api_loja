@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
@@ -12,6 +12,12 @@ export class ProductService {
     private productRepository: Repository<Product>,
   ) {}
 
+  notFound() {
+    throw new NotFoundException({
+      statusCode: 404,
+      message: 'Produto não encontrado',
+    });
+  }
   async create(
     createProductDto: Partial<CreateProductDto>,
   ): Promise<Product | Error> {
@@ -52,27 +58,32 @@ export class ProductService {
         }
       })
       .catch((err) => {
-        err;
+        throw new Error(err);
       });
   }
 
   async update(id: number, updateProductDto: UpdateProductDto) {
-    return await this.productRepository.update(updateProductDto, {
+    const result = await this.productRepository.update(updateProductDto, {
       where: {
         id: id,
       },
     });
+    const product = this.findOne(id);
+    if (result[0] !== 0) {
+      return product;
+    }
+    this.notFound();
   }
 
   async remove(id: number) {
-    return await this.productRepository
-      .destroy({
-        where: {
-          id: id,
-        },
-      })
-      .then(() => {
-        return [null];
-      });
+    const result = await this.productRepository.destroy({
+      where: {
+        id: id,
+      },
+    });
+    if (result !== 0) {
+      return result;
+    }
+    this.notFound();
   }
 }
