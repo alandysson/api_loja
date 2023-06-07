@@ -1,42 +1,71 @@
-import { Injectable } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { Meta } from '../response/meta';
+import { RestResponse } from '../response/restResponse';
 import { HelperConstants } from './helperConstants';
-import { Meta } from 'src/response/meta';
-import { RestResponse } from 'src/response/restResponse';
+import { Pagination } from 'src/response/pagination';
 
 @Injectable()
 export class HelperService {
   returnMeta(statusCodeParam: number): Meta {
     const list = Array.of(
-      new Meta(
-        HelperConstants.OPERATION_SUCCESS,
-        'Operação realizada com Sucesso!',
-      ),
-      new Meta(
-        HelperConstants.ERROR,
-        'Ocorreu um erro ao realizar a operação!',
-      ),
-      new Meta(
-        HelperConstants.UNAUTHORIZED,
-        'Acesso não autorizado, tente novamente mais tarde',
-      ),
-      new Meta(
-        HelperConstants.EXPIRED_TOKEN,
-        'Token expirado, realize novo login',
-      ),
+      new Meta(HttpStatus.OK, 'Operação realizada com Sucesso!'),
+      new Meta(HttpStatus.AMBIGUOUS, 'Ocorreu um erro ao realizar a operação!'),
+      new Meta(HttpStatus.METHOD_NOT_ALLOWED, 'Acesso não autorizado!'),
+      new Meta(HttpStatus.UNAUTHORIZED, 'Token expirado, realize novo login'),
+      new Meta(HttpStatus.CREATED, 'Objeto criado!'),
     );
 
     return list.find((element) => element.statusCode == statusCodeParam);
   }
 
-  async responseResult(promise: Promise<any>) {
+  calcTotalPages(count: number, perPageParam?: number) {
+    const perPage = perPageParam
+      ? perPageParam
+      : HelperConstants.RESULTS_PER_PAGE;
+    const totalCalculation = count / perPage;
+    return count % perPage == 0
+      ? totalCalculation
+      : Math.trunc(totalCalculation + 1);
+  }
+
+  notFound(entity: string) {
+    throw new NotFoundException({
+      data: null,
+      meta: new Meta(HttpStatus.NOT_FOUND, `${entity} não encontrado`),
+    });
+  }
+
+  async responseResult(
+    promise: Promise<any>,
+    page?: number,
+    isCreating: boolean = false,
+  ) {
     const restResponse = new RestResponse();
     try {
       const result = await promise;
-      restResponse.data = result;
-      restResponse.meta = this.returnMeta(HelperConstants.OPERATION_SUCCESS);
+      if (!result) {
+        this.notFound('Produto');
+      }
+      restResponse.data = result.data;
+      restResponse.meta = this.returnMeta(
+        isCreating ? HttpStatus.CREATED : HttpStatus.OK,
+      );
+      restResponse.meta.pagination = new Pagination(
+        page,
+        result.totalPages,
+        result.count,
+      );
     } catch (error) {
-      restResponse.data = null;
-      restResponse.meta = this.returnMeta(HelperConstants.ERROR);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.log(error);
+      throw new InternalServerErrorException('Internal server error');
     }
     return restResponse;
   }

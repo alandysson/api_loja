@@ -6,13 +6,12 @@ import {
   Patch,
   Param,
   Delete,
-  Res,
+  Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { RestResponse } from 'src/response/restResponse';
-import { HelperConstants } from 'src/helpers/helperConstants';
 import { HelperService } from 'src/helpers/helper.service';
 
 @Controller('product')
@@ -22,22 +21,34 @@ export class ProductController {
     private helperService: HelperService,
   ) {}
 
-  @Post('/create')
+  @Post()
   create(@Body() createProductDto: CreateProductDto) {
-    return this.productService.create(createProductDto);
+    const result = this.helperService.responseResult(
+      this.productService.create(createProductDto),
+      1,
+      true, // isCreat
+    );
+    return result;
   }
 
   @Get()
-  findAll() {
-    return this.productService.findAll();
+  async findAll(@Query('page') page: number): Promise<RestResponse> {
+    const result = this.helperService.responseResult(
+      this.productService.findAll(page),
+      page,
+    );
+    return result;
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.productService.findOne(+id);
+  async findOne(@Param('id') id: string): Promise<RestResponse> {
+    const result = this.helperService.responseResult(
+      this.productService.findOne(+id),
+    );
+    return result;
   }
 
-  @Patch('/update/:id')
+  @Patch(':id')
   async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
@@ -48,8 +59,8 @@ export class ProductController {
     return result;
   }
 
-  @Delete('/delete/:id')
-  async remove(@Param('id') id: string) {
+  @Delete(':id')
+  async remove(@Param('id') id: string): Promise<RestResponse> {
     const result = this.helperService.responseResult(
       this.productService.remove(+id),
     );
