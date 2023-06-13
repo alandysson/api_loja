@@ -1,6 +1,7 @@
 import {
   BelongsTo,
   Column,
+  DataType,
   ForeignKey,
   Model,
   Table,
@@ -13,7 +14,7 @@ export class Product extends Model<Product> {
   @Column
   name: string;
 
-  @Column
+  @Column({ type: DataType.DECIMAL(10, 2) })
   value: number;
 
   @Column

@@ -1,4 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  HttpStatus,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -12,13 +17,9 @@ export class UsersService {
     private usersRepository: typeof User,
   ) {}
 
-  create(createUserDto: Partial<CreateUserDto>): Promise<User | Error> {
+  create(createUserDto: Partial<CreateUserDto>) {
     const user = this.usersRepository.create(createUserDto);
-    return user
-      .then((user) => user)
-      .catch((err) => {
-        return err;
-      });
+    return user;
   }
 
   async findAll(page?: number): Promise<User[]> {
@@ -39,9 +40,29 @@ export class UsersService {
   }
 
   async findOne(id: number) {
-    return await this.usersRepository.findOne({
+    const result = await this.usersRepository.findOne({
       where: { id },
     });
+    if (!result) {
+      throw new NotFoundException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'Usuário não encontrado.',
+      });
+    }
+    return result;
+  }
+
+  async findByEmail(email: string): Promise<User> {
+    const result = await this.usersRepository.findOne({
+      where: { email: email },
+    });
+    if (!result) {
+      throw new NotFoundException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'Usuário não encontrado.',
+      });
+    }
+    return result;
   }
 
   async findOneByParam(userName?: string, email?: string) {

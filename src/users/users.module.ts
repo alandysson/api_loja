@@ -15,5 +15,6 @@ import { IsUserAlreadyExistConstraint } from 'src/validators/userName.validator'
     IsUserAlreadyExistConstraint,
     IsEmailAlreadyExistConstraint,
   ],
+  exports: [UsersService],
 })
 export class UsersModule {}
